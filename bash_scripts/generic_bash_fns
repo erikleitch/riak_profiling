@@ -62,3 +62,37 @@ valOrEmpty()
     echo $val
 }
 
+commentVar()
+{
+    path=$1
+    var=$2
+    if [ $(varIsCommented $path $var) == "false" ]
+    then
+	echo "Var is NOT commented"
+	substitute $path "$(uncommentedVar $var)" "$(commentedVar $var)"
+    fi
+}
+
+uncommentVar()
+{
+    path=$1
+    var=$2
+
+    echo $(commentedVar $var) 
+    echo $(uncommentedVar $var)
+
+    if [ $(varIsCommented $path $var) == "true" ]
+    then
+	substitute $path "$(commentedVar $var)" "$(uncommentedVar $var)"
+    fi
+}
+
+substitute()
+{
+    path=$1
+    fromStr=$2
+    toStr=$3
+
+    local file=$(filename $path)
+    sed -i '.sed' "s/$fromStr/$toStr/g" $file
+}

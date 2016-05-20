@@ -1,3 +1,13 @@
+redev_fn()
+{
+    riakTestDir=$1
+    nNode=$2
+
+    \rm -rf dev
+    make devrel DEVNODES=$nNode
+    $riakTestDir/bin/rtdev-current.sh
+}
+
 insertIncludeLineAfter()
 {
     file=$(valOrDef file '' $@)

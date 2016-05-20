@@ -2,7 +2,7 @@ insertIncludeLineAfter()
 {
     file=$(valOrDef file '' $@)
     after=$(valOrDef after '-module' $@)
-    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-after \"$after\")'"
+    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-after \"$after\")'"
     eval $cmd
 }
 
@@ -10,7 +10,7 @@ insertIncludeLineBefore()
 {
     file=$(valOrDef file '' $@)
     before=$(valOrDef before '-module' $@)
-    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-before \"$before\")'"
+    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-before \"$before\")'"
     eval $cmd
 }
 
@@ -25,10 +25,10 @@ insertProfPair()
 
     if [ -z $tag ]
     then
-        cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def \"$fnstart\" \"$before\" \"$after\" \"$replace\")'"
+        cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def \"$fnstart\" \"$before\" \"$after\" \"$replace\")'"
 	eval $cmd
     else
-	cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-pair \"$fnstart\" \"$before\" \"$after\" \"$tag\" \"$replace\")'"
+	cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair \"$fnstart\" \"$before\" \"$after\" \"$tag\" \"$replace\")'"
 	eval $cmd
     fi
     
@@ -44,10 +44,10 @@ insertProfBefore()
     
     if [ -z $tag ]
     then
-        evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-before-line-def \"$fnstart\" \"$before\" \"$cmd\")'"
+        evalcmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-before-line-def \"$fnstart\" \"$before\" \"$cmd\")'"
 	eval $evalcmd
     else
-	evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-before-line \"$fnstart\" \"$before\" \"$tag\" \"$cmd\" \"false\")'"
+	evalcmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-before-line \"$fnstart\" \"$before\" \"$tag\" \"$cmd\" \"false\")'"
 	eval $evalcmd
     fi
 }
@@ -63,10 +63,10 @@ insertProfAfter()
 
     if [ -z $tag ]
     then
-        evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-after-line-def \"$fnstart\" \"$after\" \"$cmd\" \"$replace\")'"
+        evalcmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-after-line-def \"$fnstart\" \"$after\" \"$cmd\" \"$replace\")'"
 	eval $evalcmd
     else
-	evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-after-line \"$fnstart\" \"$after\" \"$tag\" \"$cmd\" \"$replace\" \"false\")'"
+	evalcmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-after-line \"$fnstart\" \"$after\" \"$tag\" \"$cmd\" \"$replace\" \"false\")'"
 	eval $evalcmd
     fi
 }
@@ -79,7 +79,7 @@ insertRet()
     after=$(valOrDef after '' $@)
     next=$(valOrDef next '' $@)
 
-    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-ret \"$fnstart\" \"$before\" \"$after\" \"$next\")'"
+    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-ret \"$fnstart\" \"$before\" \"$after\" \"$next\")'"
     eval $cmd
 }
 

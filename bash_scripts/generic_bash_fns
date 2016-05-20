@@ -1,0 +1,64 @@
+#============================================================
+# Arg parsing functions
+#============================================================
+
+#------------------------------------------------------------
+# Given a possible list of var=val args, return the specified value
+# for a named parameter, or its default value
+#
+# Use like:
+#
+#      valOrDef myvar defval              (returns defval)
+#      valOrDef myvar defval myvar=newval (returns newval)
+#
+#------------------------------------------------------------
+
+valOrDef()
+{
+    name=$1
+    val=$2
+    for arg in ${@:3}
+    do
+	tmpVal=$(valOrEmpty $name $arg)
+	if [ ! -z $tmpVal ]
+	then
+	    val=$tmpVal
+	fi
+	
+    done
+    echo $val
+}
+
+#------------------------------------------------------------
+# Given a named variable and a possible variable assignment,
+# return the specified value, or an empty variable
+#
+# Use like:
+#
+#      valOrEmpty myvar                   (returns empty)
+#      valOrEmpty myvar somevar=val       (returns empty)
+#      valOrEmpty myvar myvar=val         (returns val)
+#
+#------------------------------------------------------------
+
+valOrEmpty()
+{
+    if [ $# -lt 2 ]
+    then
+	echo "Usage: valOrEmpty name args"
+    fi
+
+    name=$1
+    val=''
+    arr=(`echo $2 | tr "=" " "`)
+    case ${arr[0]} in
+    	$name)
+	    val=${arr[1]}
+	    ;;
+	*)
+	    ;;
+    esac
+
+    echo $val
+}
+

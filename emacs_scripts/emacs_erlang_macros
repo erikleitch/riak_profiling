@@ -1,0 +1,157 @@
+;;=======================================================================
+;; Erlang editing Macros
+;;=======================================================================
+
+;;-----------------------------------------------------------------------
+;; Insert a pair of default profiler tags
+;;-----------------------------------------------------------------------
+
+(defun insert-prof-pair-def (fnstart linebefore lineafter replace)
+  (interactive "sfnstart: \nslinebefore: \nslineafter: \nsreplace")
+  (insert-prof-before-line-def fnstart linebefore "start")
+  (insert-prof-after-line-def fnstart lineafter "stop" replace)
+  )
+
+(defun insert-prof-pair (fnstart linebefore lineafter tag replace)
+  (interactive "sfnstart: \nslinebefore: \nslineafter: \nstag: \nsreplace")
+  (insert-prof-before-line fnstart linebefore tag "start" false)
+  (insert-prof-after-line fnstart lineafter tag "stop" replace false)
+  )
+
+;;------------------------------------------------------------
+;; Insert a profiler tag before the specified line
+;;------------------------------------------------------------
+
+(defun insert-prof-before-line-def (fnstart line cmd)
+  (interactive "sfnstart: \nsline: \nscmd:")
+  (insert-prof-before-line fnstart line "?FNNAME()" cmd "true")
+  )
+
+(defun insert-prof-before-line (fnstart line tag cmd literal)
+  (interactive "sfnstart: \nsline: \nstag: \nscmd: \nsliteral:")
+  (beginning-of-buffer)
+  (re-search-forward fnstart) (beginning-of-line)
+  (re-search-forward line) (beginning-of-line)
+
+  (if (equal literal "true")
+      (progn
+	(insert "    profiler:perf_profile({" cmd ", ")(insert tag)(insert "}),\n")	
+	)
+
+    (progn
+      	(insert "    profiler:perf_profile({" cmd ", \"")(insert tag)(insert "\"}),\n")	
+	)
+    )
+
+
+  (save-buffer)
+  )
+
+;;------------------------------------------------------------
+;; Insert a profiler tag after the specified line
+;;------------------------------------------------------------
+
+(defun insert-prof-after-line-def (fnstart line cmd replace)
+  (interactive "sfnstart: \nsline: \nscmd: \nsreplace: ")
+  (insert-prof-after-line fnstart line "?FNNAME()" cmd replace "true")
+  )
+
+(defun insert-prof-after-line (fnstart line tag cmd replace literal)
+  (interactive "sstart string: \nsline: \nstag: \nscmd: \nsreplace: \nsliteral:")
+  (beginning-of-buffer)
+  (re-search-forward fnstart) (beginning-of-line)
+  (re-search-forward line) (end-of-line)
+
+  (if (equal replace "true")
+      (progn
+	(setq segstart (point))
+	(forward-char -1)
+	(setq term (delete-and-extract-region segstart (point)))    
+	(insert ",")
+	)
+    )
+
+  (insert "\n")
+
+  (if (equal literal "true")
+      (progn
+	(insert "    profiler:perf_profile({" cmd ", ")(insert tag)(insert "})")	
+	)
+    
+    (progn
+      (insert "    profiler:perf_profile({" cmd ", \"")(insert tag)(insert "\"})")	
+      )
+    )
+  
+  (if (equal replace "true")
+      (progn
+	(insert term)
+	)
+
+    (progn
+      	(insert ",")
+	)
+    )
+  
+  (save-buffer)
+  )
+
+;;------------------------------------------------------------
+;; Insert a Return 
+;;------------------------------------------------------------
+
+(defun insert-prof-ret (fnstart startlinebefore endlineafter next)
+  (interactive "sfnstart: \nsstart line before: \nend line before")
+  (beginning-of-buffer)
+  (re-search-forward fnstart) (beginning-of-line)
+  (re-search-forward startlinebefore) (beginning-of-line)
+  (insert "\n")
+  (forward-line -1)(insert "Ret =")(beginning-of-line)(indent-for-tab-command)
+
+  (re-search-forward next)
+  (re-search-backward endlineafter) (end-of-line)
+
+  (setq segstart (point))
+  (forward-char -1)
+  (setq term (delete-and-extract-region segstart (point)))    
+
+  (insert ",\n")
+  (indent-for-tab-command)(insert "Ret" term)
+  (save-buffer)
+  )
+
+;;------------------------------------------------------------
+;; Insert a line after the specified line
+;;------------------------------------------------------------
+
+(defun insert-prof-include-line-after (afterline)
+  (interactive "safterline:")
+  (insert-prof-line-after afterline "\n-include_lib(\"profiler/include/profiler.hrl\").\n")
+  )	       
+
+(defun insert-prof-line-after (afterline insertline)
+  (interactive "safterline: \nsinsertline")
+  (beginning-of-buffer)
+  (re-search-forward afterline) (end-of-line)
+  (insert insertline)
+  (save-buffer)
+)	  
+
+;;------------------------------------------------------------
+;; Insert a line before the specified line
+;;------------------------------------------------------------
+
+(defun insert-prof-include-line-before (beforeline)
+  (interactive "sbeforeline:")
+  (insert-prof-line-before beforeline "\n-include_lib(\"profiler/include/profiler.hrl\").\n")
+  )	       
+
+(defun insert-prof-line-before (beforeline insertline)
+  (interactive "sbeforeline: \nsinsertline")
+  (beginning-of-buffer)
+  (re-search-forward beforeline) (beginning-of-line)
+  (insert "\n")	     
+  (forward-line -1)    
+  (insert insertline)(insert "\n")(beginning-of-line)(indent-for-tab-command)
+  (save-buffer)
+)	  

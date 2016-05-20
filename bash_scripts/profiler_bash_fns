@@ -1,0 +1,121 @@
+insertIncludeLineAfter()
+{
+    file=$(valOrDef file '' $@)
+    after=$(valOrDef after '-module' $@)
+    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-after \"$after\")'"
+    eval $cmd
+}
+
+insertIncludeLineBefore()
+{
+    file=$(valOrDef file '' $@)
+    before=$(valOrDef before '-module' $@)
+    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-include-line-before \"$before\")'"
+    eval $cmd
+}
+
+insertProfPair()
+{
+    file=$(valOrDef file '' $@)
+    fnstart=$(valOrDef fnstart '' $@)
+    before=$(valOrDef before '' $@)
+    after=$(valOrDef after '' $@)
+    tag=$(valOrDef tag '' $@)
+    replace=$(valOrDef replace 'true' $@)
+
+    if [ -z $tag ]
+    then
+        cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def \"$fnstart\" \"$before\" \"$after\" \"$replace\")'"
+	eval $cmd
+    else
+	cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-pair \"$fnstart\" \"$before\" \"$after\" \"$tag\" \"$replace\")'"
+	eval $cmd
+    fi
+    
+}
+
+insertProfBefore()
+{
+    file=$(valOrDef file '' $@)
+    fnstart=$(valOrDef fnstart '' $@)
+    before=$(valOrDef before '' $@)
+    tag=$(valOrDef tag '' $@)
+    cmd=$(valOrDef cmd '' $@)
+    
+    if [ -z $tag ]
+    then
+        evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-before-line-def \"$fnstart\" \"$before\" \"$cmd\")'"
+	eval $evalcmd
+    else
+	evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-before-line \"$fnstart\" \"$before\" \"$tag\" \"$cmd\" \"false\")'"
+	eval $evalcmd
+    fi
+}
+
+insertProfAfter()
+{
+    file=$(valOrDef file '' $@)
+    fnstart=$(valOrDef fnstart '' $@)
+    after=$(valOrDef after '' $@)
+    replace=$(valOrDef replace 'true' $@)
+    tag=$(valOrDef tag '' $@)
+    cmd=$(valOrDef cmd '' $@)
+
+    if [ -z $tag ]
+    then
+        evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-after-line-def \"$fnstart\" \"$after\" \"$cmd\" \"$replace\")'"
+	eval $evalcmd
+    else
+	evalcmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-after-line \"$fnstart\" \"$after\" \"$tag\" \"$cmd\" \"$replace\" \"false\")'"
+	eval $evalcmd
+    fi
+}
+
+insertRet()
+{
+    file=$(valOrDef file '' $@)
+    fnstart=$(valOrDef fnstart '' $@)
+    before=$(valOrDef before '' $@)
+    after=$(valOrDef after '' $@)
+    next=$(valOrDef next '' $@)
+
+    cmd="emacs --batch --load ~/emacs_erlang_macros --file $file --eval '(insert-prof-ret \"$fnstart\" \"$before\" \"$after\" \"$next\")'"
+    eval $cmd
+}
+
+addputpathprofiling_ts1.3()
+{
+    #------------------------------------------------------------
+    # Set up riakc for profiling
+    #------------------------------------------------------------
+    
+    insertIncludeLineAfter file=deps/riakc/src/riakc_ts.erl after='-include(\"riakc.hrl\")'
+    insertRet file=deps/riakc/src/riakc_ts.erl fnstart="put(Pid, Table, Measurements, Options)" before='riakc_ts_put_operator:deserialize' after='riakc_ts_put_operator:deserialize' next="delete"
+
+    insertProfPair file=deps/riakc/src/riakc_ts.erl fnstart="put(Pid, Table, Measurements, Options)" before="UseTTB" after='riakc_ts_put_operator:deserialize'
+
+    #------------------------------------------------------------
+    # Set up riak_api for profiling
+    #------------------------------------------------------------
+
+    insertIncludeLineAfter file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl after='-export_type'
+    
+    insertProfBefore file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart="init(" before=riak_api_stat:update tag=/tmp/server_profiler_results cmd=prefix
+    insertRet        file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart="process_message(atom" before='Service:process' after='end\\.' next="@doc"
+    insertProfPair   file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart="process_message(atom" before="Ret = " after='end,'
+
+    #------------------------------------------------------------
+    # Set up riak_kv for profiling
+    #------------------------------------------------------------
+
+    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
+    insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before='case riak_kv_ts' after='end\\.' next="%% ----"
+    insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before="Ret = " after='end,'
+}
+
+addriakkvprofiling()
+{
+    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
+    insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before='case riak_kv_ts' after='end\\.' next="%% ----"
+    insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before="Ret = " after='end,'
+}

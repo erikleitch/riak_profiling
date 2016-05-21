@@ -62,6 +62,18 @@ valOrEmpty()
     echo $val
 }
 
+commentedVar()
+{
+    var=$1
+    echo "%\-define($var, 1)"
+}
+
+uncommentedVar()
+{
+    var=$1
+    echo "\-define($var, 1)"
+}
+
 commentVar()
 {
     path=$1
@@ -85,6 +97,29 @@ uncommentVar()
     then
 	substitute $path "$(commentedVar $var)" "$(uncommentedVar $var)"
     fi
+}
+
+varIsCommented()
+{
+    path=$1
+    var=$2
+    str=$(commentedVar $var)
+    local file=$(filename $path)
+    res=`grep "$str" $file`
+
+    if [ ! -z "$res" ] 
+    then
+	echo "true"
+    else
+	echo "false"
+    fi
+}
+
+filename()
+{
+    path=$1
+    riakTestDir=`pwd`
+    echo "$riakTestDir/$path"
 }
 
 substitute()

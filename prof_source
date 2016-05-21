@@ -1,3 +1,5 @@
 export RIAK_PROF_BASE=`pwd`
 source bash_scripts/generic_bash_fns
 source bash_scripts/profiler_bash_fns
+source bash_scripts/put_bash_fns
+

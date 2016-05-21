@@ -2,7 +2,7 @@
 
 writePutFiles()
 {
-    if [ $# -lt 2 ]
+    if [ $# -lt 1 ]
     then
 	echo "Usage: writePutFile nRecord"
 	return
@@ -26,9 +26,13 @@ writePutFiles()
     echo "" >> $filename
     echo "confirm() ->" >> $filename
     echo "  profiler:profile({prefix, \"/tmp/client_profiler_results\"})," >> $filename
+    echo "  profiler:profile({noop, false})," >> $filename
+    echo "  profiler:profile({start, \"total\"})," >> $filename
     echo "" >> $filename
     echo "  DDL  = ts_api_util:get_ddl(api)," >> $filename
-    echo "  ts_api_util:setup_cluster_put_timeseries(single, n_val_one, DDL, $nRecord, 1, true)," >> $filename
+    echo "  ts_api_util:setup_cluster_timeseries(single, n_val_one, DDL, $nRecord, 1, true)," >> $filename
+    echo "" >> $filename
+    echo "  profiler:profile({stop, \"total\"})," >> $filename
     echo "  pass." >> $filename
 
     #------------------------------------------------------------
@@ -49,16 +53,16 @@ writePutFiles()
     echo "foldProf(_N, 0) ->" >> $filename
     echo "    ok;" >> $filename
     echo "foldProf(N, Acc) ->" >> $filename
-    echo "    profiler:perf_profile({start, 1, ?FNNAME()})," >> $filename
-    echo "    profiler:perf_profile({stop, 1})," >> $filename
+    echo "    profiler:perf_profile({start, ?FNNAME()})," >> $filename
+    echo "    profiler:perf_profile({stop,  ?FNNAME()})," >> $filename
     echo "    foldProf(N, Acc-1)." >> $filename
     echo "" >> $filename
     echo "confirm() ->" >> $filename
     echo "    profiler:profile({prefix, \"/tmp/client_profiler_results\"})," >> $filename
     echo "" >> $filename
-    echo "    profiler:perf_profile({start, 0, ?FNNAME()})," >> $filename
+    echo "    profiler:perf_profile({start, \"total\"})," >> $filename
     echo "    foldProf(1000000)," >> $filename
-    echo "    profiler:perf_profile({stop, 0})," >> $filename
+    echo "    profiler:perf_profile({stop, \"total\"})," >> $filename
     echo "" >> $filename
     echo "    pass." >> $filename
 }
@@ -67,7 +71,7 @@ runPutProfile()
 {
     echo "Narg = $#"
     
-    if [ $# -lt 2 ]
+    if [ $# -lt 1 ]
     then
 	echo "Usage: runPutProfile nRecord"
 	return
@@ -133,7 +137,7 @@ runPutProfile()
     cp riak_graphviz/riak_graphviz.py $outDir
     
     echo "import riak_ts_profiles as rp" > $outDir/makeGraph.py
-    echo "rp.makePutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', 'profbase.txt')" >> $outDir/makeGraph.py
+    echo "rp.makeTsPutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', 'profbase.txt')" >> $outDir/makeGraph.py
 
     #------------------------------------------------------------
     # Make sure profiler output directories exist
@@ -166,13 +170,11 @@ runPutProfile()
 
     cd $riakTestDir
     commentVar deps/profiler/include/profiler.hrl PROFILE
-    cd $riakTestDir/deps/profiler
-    make
-
+    cd deps/profiler;make
+    
     cd $riakTestDir
     commentVar riak_ee/deps/profiler/include/profiler.hrl PROFILE
-    cd $riakTestDir/riak_ee/deps/profiler
-    make
+    cd riak_ee/deps/profiler;make
 
     cd $riakTestDir/riak_ee
     redev_fn $riakTestDir 1

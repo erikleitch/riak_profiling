@@ -1792,12 +1792,14 @@ def graphAae():
     d.title('Riak AAE  Path')
     d.render('aae')
 
-graphTsQuery()
-graphTsPut()
-graphPut()
-graphGet()
-graphW1cPut()
-graphTsListKeys()
-graphReadRepair()
-graphAae()
+def makeGraphs():
+    graphTsQuery()
+    graphTsPut()
+    graphPut()
+    graphGet()
+    graphW1cPut()
+    graphTsListKeys()
+    graphReadRepair()
+    graphAae()
+
     

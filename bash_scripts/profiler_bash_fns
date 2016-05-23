@@ -121,11 +121,13 @@ addputpathprofiling_ts1.3()
     insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
     insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before='case riak_kv_ts' after='end\\.' next="%% ----"
     insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before="Ret = " after='end,'
+
+    insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart="sync_put(Context" before='case eleveldb:sync_put' after='end\\.' next="indexes_fixed"
+    insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart="sync_put(Context" before="Ret = " after='end,'
 }
 
 addriakkvprofiling()
 {
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
-    insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before='case riak_kv_ts' after='end\\.' next="%% ----"
-    insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart="sub_tsputreq(Mod" before="Ret = " after='end,'
+    insertRet         file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart="sync_put(Context" before='case eleveldb:sync_put' after='end\\.' next="indexes_fixed"
+    insertProfPair    file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart="sync_put(Context" before="Ret = " after='end,'
 }

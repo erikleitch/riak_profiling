@@ -27,12 +27,16 @@ writePutFiles()
     echo "confirm() ->" >> $filename
     echo "  profiler:profile({prefix, \"/tmp/client_profiler_results\"})," >> $filename
     echo "  profiler:profile({noop, false})," >> $filename
-    echo "  profiler:profile({start, \"total\"})," >> $filename
-    echo "" >> $filename
+
     echo "  DDL  = ts_api_util:get_ddl(api)," >> $filename
-    echo "  ts_api_util:setup_cluster_timeseries(single, n_val_one, DDL, $nRecord, 1, true)," >> $filename
+    echo "  [C, Bucket] = ts_api_util:build_and_activate_cluster_timeseries(single, n_val_one, DDL)," >> $filename
+    echo "  Data = [[<<\"family1\">>, <<\"seriesX\">>, 100, 1, <<\"test1\">>, 1.0, true]]," >> $filename
     echo "" >> $filename
-    echo "  profiler:profile({stop, \"total\"})," >> $filename
+    echo "  profiler:profile({start, "total"})," >> $filename
+    echo "  ok = ts_api_util:putDataModTime(C, Bucket, Data, $nRecord, 1, true)," >> $filename
+    echo "  profiler:profile({stop, "total"})," >> $filename
+    echo "" >> $filename
+    
     echo "  pass." >> $filename
 
     #------------------------------------------------------------

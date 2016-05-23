@@ -121,25 +121,9 @@ runPutProfile()
     
     if [ ! -d $outDir ]
     then
-	git clone https://gist.github.com/erikleitch/8191db35b09bc8357df4
-	mv 8191db35b09bc8357df4 $outDir
-    else
-	cd $outDir
-	git pull
-	cd ../
+	mkdir $outDir
     fi
 
-    if [ ! -d riak_graphviz ]
-    then
-	git clone ssh://erikleitch@github.com/erikleitch/riak_graphviz.git riak_graphviz
-    else
-	cd riak_graphviz
-	git pull
-	cd ../
-    fi
-
-    cp riak_graphviz/riak_graphviz.py $outDir
-    
     echo "import riak_ts_profiles as rp" > $outDir/makeGraph.py
     echo "rp.makeTsPutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', 'profbase.txt')" >> $outDir/makeGraph.py
 

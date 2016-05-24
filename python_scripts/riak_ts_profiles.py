@@ -581,6 +581,7 @@ def addTs1_3PutNodes(test):
                                     {'label': 'lists:foldl', 'tag': 'putfold'},
                                     [
                                         {'label': 'riak_kv_w1c_worker:validate_options'},
+                                        {'label': 'riak_kv_ts_api:pick_batch_options', 'tag':'batchoptionsblock'},
                                         (
                                             {'label': 'riak_kv_ts_api:invoke_sync_put'},
                                             [

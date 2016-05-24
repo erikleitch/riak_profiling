@@ -338,9 +338,18 @@ def addTsPutNodes(test):
         
     riakc = Node({'label': 'riakc',       'color': service_color})
 
-    riakc.append(({'label': 'riakc_ts:put'},
-                  {'label': 'riakc_ts:server_call'},
-                  {'tag':'gen_server_call1', 'label': 'gen_server:call'}))
+    riakc.append(
+        (
+            {'label': 'riakc_ts:put'},
+            [
+                (
+                    {'label': 'riakc_ts:server_call'},
+                    {'tag':'gen_server_call1', 'label': 'gen_server:call'}
+                ),
+                {'label': 'riakc_ts_put_operator:deserialize'},
+            ]
+        )
+    )
 
     #------------------------------------------------------------
     # riak_pc_socket
@@ -354,7 +363,7 @@ def addTsPutNodes(test):
         [
             (
                 {'label': 'riakc_pb_socket:handle_call'},
-                {'label': 'riakc_pb_socket:send_request'},
+                {'label': 'riakc_pb_socket:send_request', 'tag':'pathtosend'},
                 [
                     {'label': 'riakc_pb_socket:encode_request_message', 'annotation':'records encoded:(T2PB | T2B)'},
                     {'label': 'gen_tcp:send'}
@@ -383,7 +392,7 @@ def addTsPutNodes(test):
         (
             {'label': 'riak_api_pb_server:connected'},
             [
-                {'label': 'riak_kv_ts_svc:decode', 'annotation':'records decoded:(PB2T | B2T)'},
+                {'label': 'riak_kv_ttb_ts:decode', 'annotation':'records decoded:(PB2T | B2T)'},
                 {'label': 'riak_api_pb_server:process_message'},
             ],
             [
@@ -399,17 +408,23 @@ def addTsPutNodes(test):
                                 {'label': 'Mod:get_ddl'},
                                 {'label': 'partition_data'},
                                 (
-                                    {'label': 'lists:foldl', 'tag': 'foldl1'},
-                                    {'label': 'riak_kv_w1c_worker:validate_options'},
-                                    (
-                                        {'label': 'lists:foldl', 'tag':'foldl2'},
-                                        {'label': 'riak_kv_w1c_worker:build_object', 'annotation':'builds new Riak obj'},
-                                        {'label': 'riak_kv_w1c_worker:async_put'},
-                                        [
-                                            {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
-                                            {'label': 'gen_server:cast', 'tag':'gen_server_cast1'},
-                                        ]
-                                    )
+                                    {'label': 'lists:foldl', 'tag': 'putfold'},
+                                    [
+                                        {'label': 'riak_kv_w1c_worker:validate_options'},
+                                        (
+                                            {'label': 'riak_kv_ts_api:invoke_sync_put'},
+                                            [
+                                                {'label': 'riak_kv_w1c_worker:build_object', 'annotation':'builds new Riak obj'},
+                                                (
+                                                    {'label': 'riak_kv_w1c_worker:async_put'},
+                                                    [
+                                                        {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                        {'label': 'gen_server:cast', 'tag':'gen_server_cast1'},
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    ]
                                 ),
                                 {'label': 'riak_kv_w1c_worker:async_put_replies'},
                             ]

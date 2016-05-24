@@ -1,13 +1,17 @@
-export RIAK_PROF_BASE=`pwd`
+RELPATH=${BASH_SOURCE[0]%/*}
+PARENTDIR=`dirname ${RELPATH}`
+CWD="$( cd $PARENTDIR/$RELPATH; pwd )"
 
-if [ ! -d python_scripts/riak_graphviz ]
+export RIAK_PROF_BASE=$CWD
+
+if [ ! -d $RIAK_PROF_BASE/python_scripts/riak_graphviz ]
 then
-    git clone "ssh://erikleitch@github.com/erikleitch/riak_graphviz.git" -b master python_scripts/riak_graphviz
+    git clone "ssh://erikleitch@github.com/erikleitch/riak_graphviz.git" -b master $RIAK_PROF_BASE/python_scripts/riak_graphviz
 fi
 
 export PYTHONPATH=${PYTHONPATH}:${RIAK_PROF_BASE}/python_scripts:${RIAK_PROF_BASE}/python_scripts/riak_graphviz
 
-source bash_scripts/generic_bash_fns
-source bash_scripts/profiler_bash_fns
-source bash_scripts/put_bash_fns
+source $RIAK_PROF_BASE/bash_scripts/generic_bash_fns
+source $RIAK_PROF_BASE/bash_scripts/profiler_bash_fns
+source $RIAK_PROF_BASE/bash_scripts/put_bash_fns
 

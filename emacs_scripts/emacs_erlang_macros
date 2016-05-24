@@ -14,8 +14,8 @@
 
 (defun insert-prof-pair (fnstart linebefore lineafter tag replace)
   (interactive "sfnstart: \nslinebefore: \nslineafter: \nstag: \nsreplace")
-  (insert-prof-before-line fnstart linebefore tag "start" false)
-  (insert-prof-after-line fnstart lineafter tag "stop" replace false)
+  (insert-prof-before-line fnstart linebefore tag "start" "false")
+  (insert-prof-after-line fnstart lineafter tag "stop" replace "false")
   )
 
 ;;------------------------------------------------------------

@@ -1,3 +1,5 @@
+#!/bin/bash
+
 #============================================================
 # Arg parsing functions
 #============================================================
@@ -12,54 +14,53 @@
 #      valOrDef myvar defval myvar=newval (returns newval)
 #
 #------------------------------------------------------------
-
 valOrDef()
 {
-    name=$1
-    val=$2
-    for arg in ${@:3}
+    argname=$1
+    defval=$2
+
+    shift 2
+
+    retval=\"$defval\"
+    for i
     do
-	tmpVal=$(valOrEmpty $name $arg)
-	if [ ! -z $tmpVal ]
-	then
-	    val=$tmpVal
-	fi
-	
+	keyval=($(sep $i "="))
+	key=${keyval[0]}
+	key=${key//\"/}
+	val=${keyval[1]}
+
+        case $key in
+	    $argname)
+		retval=${val//^/ }
+		;;
+	    *)
+		;;
+	esac
+
     done
-    echo $val
+    echo $retval
 }
 
-#------------------------------------------------------------
-# Given a named variable and a possible variable assignment,
-# return the specified value, or an empty variable
-#
-# Use like:
-#
-#      valOrEmpty myvar                   (returns empty)
-#      valOrEmpty myvar somevar=val       (returns empty)
-#      valOrEmpty myvar myvar=val         (returns val)
-#
-#------------------------------------------------------------
+#============================================================
+# Separate a string by the first occurrence of the specified separator
+#============================================================
 
-valOrEmpty()
+sep()
 {
-    if [ $# -lt 2 ]
-    then
-	echo "Usage: valOrEmpty name args"
-    fi
-
-    name=$1
-    val=''
-    arr=(`echo $2 | tr "=" " "`)
-    case ${arr[0]} in
-    	$name)
-	    val=${arr[1]}
+    s=$1
+    sep=$2
+    case $s in
+	(*"$sep"*)
+	    before=${s%%"$sep"*}
+	    after=${s#*"$sep"}
 	    ;;
-	*)
+	(*)
+	    before=$s
+	    after=
 	    ;;
     esac
-
-    echo $val
+    after=${after//\"/\\\"}
+    echo "\"$before\" \"$after\""
 }
 
 commentedVar()

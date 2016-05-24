@@ -11,8 +11,7 @@ writePutFiles()
     nRecord=$1
 
     #------------------------------------------------------------
-    # Create the test file, that just writes the records and runs the
-    # queries
+    # Create the test file, that just writes the records
     #------------------------------------------------------------
 
     prefix="ts_put_"$nRecord
@@ -125,7 +124,7 @@ runPutProfile()
     fi
 
     echo "import riak_ts_profiles as rp" > $outDir/makeGraph.py
-    echo "rp.makeTsPutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', 'profbase.txt')" >> $outDir/makeGraph.py
+    echo "rp.makeTsPutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', None)" >> $outDir/makeGraph.py
 
     #------------------------------------------------------------
     # Make sure profiler output directories exist

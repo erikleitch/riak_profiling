@@ -213,22 +213,26 @@ add_ppp_ts1.1_riak_kv()
     # Set up riak_kv for profiling
     #------------------------------------------------------------
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl before='-spec init() -> any()'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='case (catch' after='end.' next='-spec process'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='Mod =' after='end,'
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl before='-spec init() -> any()'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='case (catch' after='end.' next='-spec process'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='Mod =' after='end,'
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl before='-define(API_VERSION'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='case eleveldb:sync_put' after='end.' next='indexes_fixed'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='Ret =' after='end,'
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl before='-define(API_VERSION'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='case eleveldb:sync_put' after='end.' next='indexes_fixed'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='Ret =' after='end,'
 
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='case Msg' after='end.' next='-spec'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='Msg =' after='end,'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='case Msg' after='end.' next='-spec'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='Msg =' after='end,'
 
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
 
-    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='length(lists' after='FailReqs.' next='-spec make_ts_keys'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='DDL =' after='FailReqs,'
+
+  #  insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
+  #  insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
+  #  insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
+
 }
 
 add_ppp_ts1.3_riak_kv()
@@ -237,25 +241,28 @@ add_ppp_ts1.3_riak_kv()
     # Set up riak_kv for profiling
     #------------------------------------------------------------
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsputreq(Mod' before='case riak_kv_ts' after='end.' next='%% ----'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsputreq(Mod' before='Ret =' after='end,'
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsputreq(Mod' before='case riak_kv_ts' after='end.' next='%% ----'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsputreq(Mod' before='Ret =' after='end,'
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl before='-define(API_VERSION'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='case eleveldb:sync_put' after='end.' next='indexes_fixed'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='Ret =' after='end,'
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl before='-define(API_VERSION'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='case eleveldb:sync_put' after='end.' next='indexes_fixed'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='Ret =' after='end,'
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl before='-spec init'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl fnstart='decode' before='case Msg' after='end.' next='-spec'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl fnstart='decode' before='Ret =' after='end,'
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl before='-spec init'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl fnstart='decode' before='case Msg' after='end.' next='-spec'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ttb_ts.erl fnstart='decode' before='Msg =' after='end,'
 
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl before='-spec api_call'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data_to_partitions(Data, Bucket' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
 
-    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl before='-spec api_call'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data_to_partitions(Data, Bucket' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data(Data, Table, Mod) ->' before='case riak_core' after='end.' next='put_data_to_partitions(Data, Bucket, BucketProps, DDL, Mod) ->'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data(Data, Table, Mod) ->' before='DDL =' after='end,'
+    
 
-    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
+#    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
 }
 
 add_ppp_ts1.3()

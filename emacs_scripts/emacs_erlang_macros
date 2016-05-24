@@ -101,7 +101,7 @@
 ;;------------------------------------------------------------
 
 (defun insert-prof-ret (fnstart startlinebefore endlineafter next)
-  (interactive "sfnstart: \nsstart line before: \nend line before")
+  (interactive "sfnstart: \nsstartlinebefore: \nsendlineafter \nsnext")
   (beginning-of-buffer)
   (re-search-forward fnstart) (beginning-of-line)
   (re-search-forward startlinebefore) (beginning-of-line)

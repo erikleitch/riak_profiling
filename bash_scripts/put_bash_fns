@@ -76,11 +76,17 @@ runPutProfile()
     
     if [ $# -lt 1 ]
     then
-	echo "Usage: runPutProfile nRecord"
+	echo "Usage: runPutProfile nRecord [TS1.3|TS1.1]"
 	return
     fi
 
     nRecord=$1
+
+    vers="TS1.3"3
+    if [ $# -eq 2 ]
+    then
+	vers=$2
+    fi
 
     annotate "Creating profiler output directories" "green"
 
@@ -98,7 +104,7 @@ runPutProfile()
     # Create the test files
     #------------------------------------------------------------
 
-    annotate "Creating test files" "green"
+    annotate "Creating version $vers test files" "green"
 
     writePutFiles $nRecord
     
@@ -144,7 +150,7 @@ runPutProfile()
     # Copy scripts we need from the profiling scripts dir
     #------------------------------------------------------------
 
-    copyscripts
+    copyscripts $vers
     
     #------------------------------------------------------------
     # Comment out the profiler macros, and run the test, to get an
@@ -295,6 +301,15 @@ copylast()
 
 copyscripts()
 {
-    cp $RIAK_PROF_BASE/erlang_scripts/timeseries_util.erl tests
-    cp $RIAK_PROF_BASE/erlang_scripts/ts_api_util.erl tests
+    local vers=$1
+    case $vers in
+	"TS1.3")
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/timeseries_util.erl tests
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/ts_api_util.erl tests
+	    ;;
+	"TS1.1")
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/timeseries_util.erl tests
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/ts_api_util.erl tests
+	    ;;
+    esac
 }

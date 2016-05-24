@@ -130,7 +130,15 @@ runPutProfile()
     fi
 
     echo "import riak_ts_profiles as rp" > $outDir/makeGraph.py
-    echo "rp.makeTsPutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', None)" >> $outDir/makeGraph.py
+
+    case $vers in
+	"TS1.3")
+	    echo "rp.makeTs1_3PutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', None)" >> $outDir/makeGraph.py
+	    ;;
+	(*)
+	    echo "rp.makeTs1_1PutGraph('$graphPrefix', $nRecord, 'client.txt', 'server.txt', 'clientcomp.txt', None)" >> $outDir/makeGraph.py
+	    ;;
+    esac
 
     #------------------------------------------------------------
     # Make sure profiler output directories exist

@@ -1,6 +1,15 @@
+#!/bin/bash
+
+SRCPATH=""
+if [[ ${BASH_SOURCE[0]} == *"/"* ]]
+then
+    SRCPATH=${BASH_SOURCE[0]%/*}
+fi
+
 RELPATH=${BASH_SOURCE[0]%/*}
 PARENTDIR=`dirname ${RELPATH}`
-CWD="$( cd $PARENTDIR/$RELPATH; pwd )"
+
+CWD="$( cd $PARENTDIR/$SRCPATH; pwd )"
 
 export RIAK_PROF_BASE=$CWD
 

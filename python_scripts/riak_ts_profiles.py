@@ -325,7 +325,177 @@ def addTsListKeysNodes(test):
     test.edge('riak_kv_keys_fsm:finish', 'riak_api_pb_server_process_stream1', {'label':'10', 'color':server_color})
 
 
-def addTsPutNodes(test):
+def addTs1_1PutNodes(test):
+    
+    service_color = 'blue'
+    fsm_color     = 'red'
+    server_color  = 'cyan'
+    internode_color = 'purple'
+    
+    #------------------------------------------------------------
+    # riakc
+    #------------------------------------------------------------
+        
+    riakc = Node({'label': 'riakc',       'color': service_color})
+
+    riakc.append(
+        (
+            {'label': 'riakc_ts:put'},
+            [
+                (
+                    {'label': 'riakc_ts:server_call'},
+                    {'tag':'gen_server_call1', 'label': 'gen_server:call'}
+                ),
+                {'label': 'riakc_ts_put_operator:deserialize'},
+            ]
+        )
+    )
+
+    #------------------------------------------------------------
+    # riak_pc_socket
+    #------------------------------------------------------------
+
+    riakpb = Node({'label': 'riakc_pb_socket',       'color': server_color})
+
+    riakpb.setNodeAttr('riakc_pb_socket', 'rank', 'same')
+                       
+    riakpb.append(
+        [
+            (
+                {'label': 'riakc_pb_socket:handle_call'},
+                {'label': 'riakc_pb_socket:send_request', 'tag':'pathtosend'},
+                [
+                    {'label': 'riakc_pb_socket:encode_request_message', 'annotation':'records encoded:(T2PB | T2B)'},
+                    {'label': 'gen_tcp:send'}
+                ]
+            ),
+            (
+                {'label': 'riakc_pb_socket:handle_info'},
+                [
+                    {'label': 'riak_pb_codec:decode', 'annotation':'response decoded:(PB2T | B2T)', 'tag':'responsedecoded'},
+                    (
+                        {'label': 'riakc_pb_socket:send_caller'},
+                        {'label' : 'gen_server:reply'}
+                    )
+                ]
+            )
+        ]
+    )
+    
+    #------------------------------------------------------------
+    # riak_api_pb_server
+    #------------------------------------------------------------
+
+    riakapi = Node({'label': 'riak_api_pb_server',       'color': fsm_color})
+
+    riakapi.append(
+        (
+            {'label': 'riak_api_pb_server:connected'},
+            [
+                {'label': 'riak_kv_pb_timeseries:decode', 'annotation':'records decoded:(PB2T | B2T)'},
+                {'label': 'riak_api_pb_server:process_message'},
+            ],
+            [
+                (
+                    {'label': 'riak_kv_pb_timeseries:process'},
+                    {'label': 'riak_kv_pb_timeseries:process_tsreq'},
+                    [
+                        {'label': 'riak_ql_ddl:make_module_name'},
+                        (
+                            {'label': 'riak_kv_pb_timeseries:put_data','annotation':'calculates preflist','annotationcolor':'gray'},
+                            [
+                                {'label': 'Mod:get_ddl'},
+                                {'label': 'partition_data'},
+                                (
+                                    {'label': 'lists:foldl', 'tag': 'putfold'},
+                                    [
+                                        {'label': 'riak_kv_w1c_worker:validate_options'},
+                                        (
+                                            {'label': 'riak_kv_ts_api:invoke_sync_put'},
+                                            [
+                                                {'label': 'riak_kv_w1c_worker:build_object', 'annotation':'builds new Riak obj'},
+                                                (
+                                                    {'label': 'riak_kv_w1c_worker:async_put'},
+                                                    [
+                                                        {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                        {'label': 'gen_server:cast', 'tag':'gen_server_cast1'},
+                                                    ]
+                                                )
+                                            ]
+                                        )
+                                    ]
+                                ),
+                                {'label': 'riak_kv_w1c_worker:async_put_replies'},
+                            ]
+                        ),
+                    ],
+                ),
+                (
+                    {'label': 'riak_api_pb_server:send_encoded_message_or_error'},
+                    {'label': 'riak_pb_codec:encode', 'annotation':'response encoded:(T2PB | T2B)'},
+                    {'label': 'riak_api_pb_server:send_message'},
+                )
+            ]
+        )
+    )
+
+    #------------------------------------------------------------
+    # riak_kv_w1c_worker
+    #------------------------------------------------------------
+    
+    riakw1cworker = Node({'label': 'riak_kv_w1c_worker',       'color': server_color})
+
+    riakw1cworker.append(
+        (
+            {'label': 'riak_kv_w1c_worker:handle_cast'},
+            {'label': 'riak_kv_w1c_worker:send_vnodes'},
+            {'label': 'gen_fsm:send_event'}
+        )
+    )
+
+    #------------------------------------------------------------
+    # riak_kv_vnode
+    #------------------------------------------------------------
+    
+    riakcorevnode = Node({'label': 'riak_core_vnode',       'color': fsm_color})
+
+    riakcorevnode.append(
+        (
+            {'label': 'riak_core_vnode:vnode_command'},
+            [
+                (
+                    {'label': 'riak_kv_vnode:handle_command'},
+                    {'label': 'riak_kv_eleveldb_backend:sync_put'},
+                    [
+                        {'label': 'riak_kv_eleveldb_backend:to_object_key'},
+                        (
+                            {'label': 'eleveldb:sync_put'},
+                            {'label': 'eleveldb:sync_write'},
+                        )
+                    ]
+                ),
+                {'label': 'riak_core_vnode:reply'},
+            ]
+        )
+    )
+
+    test.append(riakc)
+    test.append(riakpb)
+    test.append(riakapi)
+    test.append(riakw1cworker)
+    test.append(riakcorevnode)
+    test.append(getLegend())
+    
+    test.edge('gen_server_call1',               'riakc_pb_socket:handle_call',          {'label':'1', 'color':server_color})
+    test.edge('gen_tcp:send',                   'riak_api_pb_server:connected',         {'label':'2', 'color':fsm_color})
+    test.edge('gen_server_cast1',               'riak_kv_w1c_worker:handle_cast',       {'label':'3', 'color':server_color})
+    test.edge('gen_fsm:send_event',             'riak_core_vnode:vnode_command',        {'label':'4', 'color':internode_color, 'arrowhead':'diamond'})
+    test.edge('riak_core_vnode:reply',          'riak_kv_w1c_worker:async_put_replies', {'label':'5', 'color':internode_color, 'arrowhead':'diamond'})
+    test.edge('riak_api_pb_server:send_message','riakc_pb_socket:handle_info',          {'label':'6', 'color':server_color})
+    test.edge('gen_server:reply',               'gen_server_call1',                     {'label':'7', 'color':server_color})
+    
+
+def addTs1_3PutNodes(test):
     
     service_color = 'blue'
     fsm_color     = 'red'
@@ -1532,10 +1702,10 @@ def addTsQueryNodes(test):
 # Get a digraph object representing the TS put path
 #-----------------------------------------------------------------------
 
-def getTsPutDiGraph(outputPrefix,
-                    nRecord,
-                    clientFileName,     serverFileName,
-                    clientCompFileName, profilerBaseFileName):
+def getTs1_3PutDiGraph(outputPrefix,
+                       nRecord,
+                       clientFileName,     serverFileName,
+                       clientCompFileName, profilerBaseFileName):
     
     test = DiGraph()
     
@@ -1546,7 +1716,25 @@ def getTsPutDiGraph(outputPrefix,
                               clientCompFileName, profilerBaseFileName,
                               "total")
 
-    addTsPutNodes(test)
+    addTs1_3PutNodes(test)
+
+    return test
+
+def getTs1_1PutDiGraph(outputPrefix,
+                       nRecord,
+                       clientFileName,     serverFileName,
+                       clientCompFileName, profilerBaseFileName):
+    
+    test = DiGraph()
+    
+    test.nOp = int(nRecord)
+    
+    test.ingestProfilerOutput(clientFileName,     serverFileName,
+                              None, None,
+                              clientCompFileName, profilerBaseFileName,
+                              "total")
+
+    addTs1_1PutNodes(test)
 
     return test
 
@@ -1554,17 +1742,32 @@ def getTsPutDiGraph(outputPrefix,
 # Make a graph of the TS put path
 #-----------------------------------------------------------------------
 
-def makeTsPutGraph(outputPrefix,
+def makeTs1_1PutGraph(outputPrefix,
                    nRecord, 
                    clientFileName,     serverFileName,
                    clientCompFileName, profilerBaseFileName):
 
-    test = getTsPutDiGraph(outputPrefix,
+    test = getTs1_1PutDiGraph(outputPrefix,
                            nRecord,
                            clientFileName,     serverFileName,
                            clientCompFileName, profilerBaseFileName)
 
-    test.title(['RiakTS Put Path', getTimeStr(test.totalUsec/test.nOp) + ' per put'])
+    test.title(['Riak TS1.1 Put Path', getTimeStr(test.totalUsec/test.nOp) + ' per put'])
+
+    test.render(outputPrefix)
+
+
+def makeTs1_3PutGraph(outputPrefix,
+                   nRecord, 
+                   clientFileName,     serverFileName,
+                   clientCompFileName, profilerBaseFileName):
+
+    test = getTs1_3PutDiGraph(outputPrefix,
+                           nRecord,
+                           clientFileName,     serverFileName,
+                           clientCompFileName, profilerBaseFileName)
+
+    test.title(['Riak TS1.3 Put Path', getTimeStr(test.totalUsec/test.nOp) + ' per put'])
 
     test.render(outputPrefix)
 
@@ -1771,11 +1974,17 @@ def graphTsQuery():
     d.title('Riak TS Query Path')
     d.render('tsquery')
 
-def graphTsPut():
+def graphTs1_1Put():
     d = DiGraph()
-    addTsPutNodes(d)
-    d.title('Riak TS Put Path')
-    d.render('tsput')
+    addTs1_1PutNodes(d)
+    d.title('Riak TS1.1 Put Path')
+    d.render('ts1.1put')
+
+def graphTs1_3Put():
+    d = DiGraph()
+    addTs1_3PutNodes(d)
+    d.title('Riak TS1.3 Put Path')
+    d.render('ts1.3put')
 
 def graphPut():
     d = DiGraph()
@@ -1809,7 +2018,8 @@ def graphAae():
 
 def makeGraphs():
     graphTsQuery()
-    graphTsPut()
+    graphTs1_1Put()
+    graphTs1_3Put()
     graphPut()
     graphGet()
     graphW1cPut()

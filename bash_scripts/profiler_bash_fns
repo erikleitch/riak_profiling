@@ -131,6 +131,28 @@ insertRet()
     eval $cmd
 }
 
+add_ppp_ts1.1_riakc()
+{
+    #------------------------------------------------------------
+    # Set up riakc for profiling
+    #------------------------------------------------------------
+    
+    insertIncludeLineAfter file=deps/riakc/src/riakc_ts.erl after='-include("riakc.hrl")'
+    insertRet              file=deps/riakc/src/riakc_ts.erl fnstart='put(Pid, TableName, ColumnNames, Measurements) ->' before='riakc_ts_put_operator:deserialize' after='riakc_ts_put_operator:deserialize' next='delete'
+    insertProfPair         file=deps/riakc/src/riakc_ts.erl fnstart='put(Pid, TableName, ColumnNames, Measurements) ->' before='UseNative' after='riakc_ts_put_operator:deserialize'
+    insertProfPair         file=deps/riakc/src/riakc_ts.erl before='Ret =' after='riakc_ts_put_operator:deserialize(Response)' tag='riakc_ts_put_operator:deserialize'
+
+    insertIncludeLineAfter file=deps/riakc/src/riakc_pb_socket.erl after='-deprecated'
+    insertRet              file=deps/riakc/src/riakc_pb_socket.erl fnstart='encode_request_message(UseNativeEncoding, #request{msg=Msg' before='{Req' after='{Req' next='%% If the socket'
+    insertProfPair         file=deps/riakc/src/riakc_pb_socket.erl fnstart='encode_request_message(UseNativeEncoding, #request{msg=Msg' before='Ret' after='{Req'
+
+    insertRet              file=deps/riakc/src/riakc_pb_socket.erl fnstart='handle_call({req, true, Msg, Timeout}, From, State) ->' before='{noreply' after='{noreply,' next='handle_call({req, false, Msg, Timeout}, From, State) ->'
+    insertProfPair         file=deps/riakc/src/riakc_pb_socket.erl fnstart='handle_call({req, true, Msg, Timeout}, From, State) ->' before='Ret =' after='{noreply'
+
+    insertProfBefore       file=deps/riakc/src/riakc_pb_socket.erl fnstart='handle_info({Proto, Sock, Data}' before='Resp =' cmd=start
+    insertProfBefore       file=deps/riakc/src/riakc_pb_socket.erl fnstart='handle_info({Proto, Sock, Data}' before='{noreply' cmd=stop
+}
+
 add_ppp_ts1.3_riakc()
 {
     #------------------------------------------------------------
@@ -153,6 +175,22 @@ add_ppp_ts1.3_riakc()
     insertProfBefore       file=deps/riakc/src/riakc_pb_socket.erl fnstart='handle_info({Proto, Sock, Data}' before='{noreply' cmd=stop
 }
 
+add_ppp_ts1.1_riak_api()
+{
+    #------------------------------------------------------------
+    # Set up riak_api for profiling
+    #------------------------------------------------------------
+    
+    insertIncludeLineAfter file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl after='-export_type'
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='init(' before='riak_api_stat:update' tag='/tmp/server_profiler_results' cmd=prefix
+    insertRet              file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='process_message(atom' before='Service:process' after='end.' next='@doc'
+    insertProfPair         file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='process_message(atom' before='Ret =' after='end,'
+
+    insertRet              file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='try' after='end;' next='connected(_Event'
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret =' cmd=start
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret;' cmd=stop
+}
+
 add_ppp_ts1.3_riak_api()
 {
     #------------------------------------------------------------
@@ -167,6 +205,30 @@ add_ppp_ts1.3_riak_api()
     insertRet              file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='try' after='end;' next='connected(_Event'
     insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret =' cmd=start
     insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret;' cmd=stop
+}
+
+add_ppp_ts1.1_riak_kv()
+{
+    #------------------------------------------------------------
+    # Set up riak_kv for profiling
+    #------------------------------------------------------------
+
+    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl before='-spec init() -> any()'
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='case (catch' after='end.' next='-spec process'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='process_tsreq(Table' before='Mod =' after='end,'
+
+    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl before='-define(API_VERSION'
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='case eleveldb:sync_put' after='end.' next='indexes_fixed'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_eleveldb_backend.erl fnstart='sync_put(Context' before='Ret =' after='end,'
+
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='case Msg' after='end.' next='-spec'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='decode' before='Msg =' after='end,'
+
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
+
+    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
 }
 
 add_ppp_ts1.3_riak_kv()

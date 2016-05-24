@@ -226,12 +226,16 @@ add_ppp_ts1.1_riak_kv()
 
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
 
-    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='length(lists' after='FailReqs.' next='-spec make_ts_keys'
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='DDL =' after='FailReqs,'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='length(lists' after='FailReqs.' next='-spec make_ts_keys'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='put_data(Data, Table, Mod) ->' before='DDL =' after='FailReqs,'
 
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='build_object(Bucket, Mod, DDL, Row, PK) ->' before='Obj = Mod' after='dict:from_list'
+    
   #  insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
   #  insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
   #  insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
+
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put(RObj, W, PW, Bucket, NVal, LocalKey, EncodeFn, Preflist) ->' before='StartTS' after='size=size'
 
 }
 
@@ -256,7 +260,9 @@ add_ppp_ts1.3_riak_kv()
 #    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl before='-spec api_call'
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data_to_partitions(Data, Bucket' before='{ReqIds, FailReqs' after='{\\[\\], 0}, PreflistData),' tag='putfold'
 
-    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data_to_partitions(Data, Bucket' before='DataForVnode = pick_batch_option' after='length(Records)),' tag='batchoptionsblock'
+    #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data_to_partitions(Data, Bucket' before='DataForVnode = pick_batch_option' after='length(Records)),' tag='batchoptionsblock'
+
+        insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='build_object(Bucket, Mod, DDL, Row, PK) ->' before='Obj = Mod' after='dict:from_list'
     
   #  insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data(Data, Table, Mod) ->' before='case riak_core' after='end.' next='put_data_to_partitions(Data, Bucket, BucketProps, DDL, Mod) ->'
   #  insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_api.erl fnstart='put_data(Data, Table, Mod) ->' before='DDL =' after='end,'
@@ -265,6 +271,8 @@ add_ppp_ts1.3_riak_kv()
 #    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
 #    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
+
+        insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put(RObj, W, PW, Bucket, NVal, PartitionIdx, Key, EncodeFn, Preflist) ->' before='StartTS' after='size=size'
 }
 
 add_ppp_ts1.3()

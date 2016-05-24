@@ -60,27 +60,6 @@ build_and_activate_cluster_timeseries(ClusterType, TestType, DDL) ->
     riakc_pb_socket:use_native_encoding(C, true),
     [C, Bucket].
 
-setup_cluster_put(ClusterType, TestType, N, WriteOnce) ->
-    [Node | _] = timeseries_util:build_cluster(ClusterType),
-    
-    case TestType of
-	normal ->
-	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, 3, WriteOnce),
-	    {ok, _} = timeseries_util:activate_bucket(Node, []);
-	n_val_one ->
-	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, 1, WriteOnce),
-	    {ok, _} = timeseries_util:activate_bucket(Node, []);
-	no_ddl ->
-	    io:format("1 - NOT Creating or activating bucket - failure test~n"),
-	    ok
-    end,
-    Bucket = list_to_binary(timeseries_util:get_bucket()),
-    C = rt:pbc(Node),
-    Data = [[<<"family1">>, <<"seriesX">>, 100, 1, <<"test1">>, 1.0, true]],
-    ok = putData(C, Bucket, Data, N, false),
-
 setup_cluster_put(ClusterType, TestType, DDL, N, Ts) ->
     [Node | _] = timeseries_util:build_cluster(ClusterType),
     
@@ -105,33 +84,6 @@ setup_cluster_put(ClusterType, TestType, DDL, N, Ts) ->
     Data = [[<<"family1">>, <<"seriesX">>, 100, 1, <<"test1">>, 1.0, true]],
     io:format("Time before = ~p~n", [my_time()]),
     ok = putData(C, Bucket, Data, N, Ts),
-    io:format("Time after = ~p~n", [my_time()]),
-    C.
-
-setup_cluster_put_mod_time(ClusterType, TestType, DDL, N, Ts) ->
-    [Node | _] = timeseries_util:build_cluster(ClusterType),
-    
-    case TestType of
-	normal ->
-	    io:format("1 - Create and activate the bucket (1)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 3),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
-	n_val_one ->
-	    io:format("1 - Create and activate the bucket (1)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 1),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
-	no_ddl ->
-	    io:format("1 - NOT Creating or activating bucket - failure test~n"),
-	    ok
-    end,
-    Bucket = list_to_binary(timeseries_util:get_bucket()),
-    C = rt:pbc(Node),
-
-    riakc_pb_socket:use_native_encoding(C, true),
-
-    Data = [[<<"family1">>, <<"seriesX">>, 100, 1, <<"test1">>, 1.0, true]],
-    io:format("Time before = ~p~n", [my_time()]),
-    ok = putDataModTime(C, Bucket, Data, N, Ts),
     io:format("Time after = ~p~n", [my_time()]),
     C.
 
@@ -184,27 +136,33 @@ putData(C, Bucket, Data, N, Acc, Ts) ->
     end,
     putData(C, Bucket, Data, N, Acc-1, Ts).
 
-putDataModTime(C, Bucket, Data, N, Ts) ->
-    putDataModTime(C, Bucket, Data, N, N, Ts).
-putDataModTime(_C, _Bucket, _Data, _N, 0, _Ts) ->
+%------------------------------------------------------------
+% Write data to riak, modifying the timestamp
+%
+%  if Ts = true,  write via the timeseries path
+%  if Ts = false, write via the normal put path
+%------------------------------------------------------------
+
+putDataModTime(C, Bucket, Data, N, Incr, Ts) ->
+    putDataModTime(C, Bucket, Data, N, N, Incr, Ts).
+putDataModTime(_C, _Bucket, _Data, _N, 0, _Incr, _Ts) ->
     ok;
-putDataModTime(C, Bucket, Data, N, Acc, Ts) ->
+putDataModTime(C, Bucket, Data, N, Acc, Incr, Ts) ->
+    Data2 = [[<<"family1">>, <<"seriesX">>, Acc*Incr, 1, <<"test1">>, 1.0, true]],
     case Ts of
 	true ->
-	    Data2 = [[<<"family1">>, <<"seriesX">>, Acc, 1, <<"test1">>, 1.0, true]],
 	    case riakc_ts:put(C, Bucket, Data2) of
 		ok ->
 		    ok;
 		{error, Reason} ->
 		    io:format("Got an error: ~p~n", [Reason])
 	    end;
-
 	false ->
 	    Key = list_to_binary("key"++integer_to_list(Acc)),
-	    Obj = riakc_obj:new({<<"GeoCheckin">>,<<"GeoCheckin">>}, Key, Data),
+	    Obj = riakc_obj:new(<<"GeoCheckin">>, Key, Data),
 	    ok  = riakc_pb_socket:put(C, Obj)
     end,
-    putDataModTime(C, Bucket, Data, N, Acc-1, Ts).
+    putDataModTime(C, Bucket, Data, N, Acc-1, Incr, Ts).
 
 putDataExplicit(C, Bucket, Data, N, Ts) ->
     putDataExplicit(C, Bucket, Data, N, N, Ts).

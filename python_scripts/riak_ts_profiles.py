@@ -410,11 +410,14 @@ def addTs1_1PutNodes(test):
                                     {'label': 'lists:foldl', 'tag': 'putfold'},
                                     [
                                         {'label': 'riak_kv_w1c_worker:validate_options'},
-                                        {'label': 'riak_kv_pb_timeseries:build_object', 'annotation':'builds new Riak obj'},
+                                        {'label': 'riak_kv_w1c_worker:build_object', 'annotation':'builds new Riak obj'},
                                         (
                                             {'label': 'riak_kv_w1c_worker:async_put'},
                                             [
-                                                {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                (
+                                                    {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                    {'label': 'riak_object:encode'},
+                                                ),
                                                 {'label': 'gen_server:cast', 'tag':'gen_server_cast1'},
                                             ]
                                         )
@@ -584,7 +587,10 @@ def addTs1_3PutNodes(test):
                                                 (
                                                     {'label': 'riak_kv_w1c_worker:async_put'},
                                                     [
-                                                        {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                        (
+                                                            {'label': 'riak_object:to_binary', 'annotation':'converts:from Riak object:to binary:(custom binary with T2MSGPACK for value)'},
+                                                            {'label': 'riak_object:encode'},
+                                                        ),
                                                         {'label': 'gen_server:cast', 'tag':'gen_server_cast1'},
                                                     ]
                                                 )

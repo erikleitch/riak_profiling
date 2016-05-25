@@ -108,7 +108,7 @@
   (insert "\n")
   (forward-line -1)(insert "Ret =")(beginning-of-line)(indent-for-tab-command)
 
-  (re-search-forward next)
+  (re-search-forward next) (beginning-of-line)
   (re-search-backward endlineafter) (end-of-line)
 
   (setq segstart (point))

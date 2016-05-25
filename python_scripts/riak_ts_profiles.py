@@ -580,7 +580,7 @@ def addTs1_3PutNodes(test):
                                         (
                                             {'label': 'riak_kv_ts_api:invoke_sync_put'},
                                             [
-                                                {'label': 'riak_kv_w1c_worker:build_object', 'annotation':'builds new Riak obj'},
+                                                {'label': 'riak_kv_ts_api:build_object', 'annotation':'builds new Riak obj'},
                                                 (
                                                     {'label': 'riak_kv_w1c_worker:async_put'},
                                                     [

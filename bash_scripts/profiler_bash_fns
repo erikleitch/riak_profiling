@@ -231,11 +231,12 @@ add_ppp_ts1.1_riak_kv()
 
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_pb_timeseries.erl fnstart='build_object(Bucket, Mod, DDL, Row, PK) ->' before='Obj = Mod' after='dict:from_list'
     
-  #  insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
-  #  insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
+    #  insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl after='-include("riak_kv_wm_raw.hrl")'
+    #  insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='async_put_reply_loop' after='find_put_timeout' next='%%%==='
   #  insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put_replies(ReqIdTuples, Options) ->' before='Ret =' after='find_put_timeout'
 
- #   insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put(RObj, W, PW, Bucket, NVal, LocalKey, EncodeFn, Preflist) ->' before='StartTS' after='size=size'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put(RObj, W, PW, Bucket, NVal, LocalKey, EncodeFn, Preflist) ->' before='StartTS' after='size=size'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='handle_cast({put, Bucket,' before='NewState = case' after='end,'
 
 #    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[is_ts/1\\]).'
 #    insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='encode(Bin, msgpack) ->' before='encode_msgpack(Bin).' after='encode_msgpack(Bin).' next='encode_msgpack(Bin) ->'
@@ -293,6 +294,17 @@ add_ppp_ts1.3_riak_kv()
 
     insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='new_v1' after='new_v1' next='%% @doc'
     insertProfPair          file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='Ret =' after='new_v1'
+}
+
+add_ppp_ts1.1_riak_core()
+{
+    #------------------------------------------------------------
+    # Set up riak_core for profiling
+    #------------------------------------------------------------
+
+    insertIncludeLineBefore file=riak_ee/deps/riak_core/src/riak_core_vnode.erl before='%% handle_exit/3'
+    insertRet               file=riak_ee/deps/riak_core/src/riak_core_vnode.erl fnstart='vnode_command(Sender, Request, State=#state{mod=Mod,' before='case catch' after='end.' next='vnode_coverage'
+    insertProfPair          file=riak_ee/deps/riak_core/src/riak_core_vnode.erl fnstart='vnode_command(Sender, Request, State=#state{mod=Mod,' before='Ret =' after='end,'
 }
 
 add_ppp_ts1.3_riak_core()

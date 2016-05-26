@@ -626,8 +626,13 @@ def addTs1_3PutNodes(test):
     riakw1cworker.append(
         (
             {'label': 'riak_kv_w1c_worker:handle_cast'},
-            {'label': 'riak_kv_w1c_worker:send_vnodes'},
-            {'label': 'gen_fsm:send_event'}
+            [
+                (
+                    {'label': 'riak_kv_w1c_worker:send_vnodes'},
+                    {'label': 'gen_fsm:send_event'}
+                ),
+                {'label': 'riak_kv_w1c_worker:postcommit'},
+            ]
         )
     )
 

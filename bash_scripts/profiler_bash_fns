@@ -238,9 +238,12 @@ add_ppp_ts1.1_riak_kv()
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='async_put(RObj, W, PW, Bucket, NVal, LocalKey, EncodeFn, Preflist) ->' before='StartTS' after='size=size'
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='handle_cast({put, Bucket,' before='NewState = case' after='end,'
 
-    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[get_ts_local_key/1\\]).'
+#    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[get_ts_local_key/1\\]).'
 #    insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='encode(Bin, msgpack) ->' before='encode_msgpack(Bin).' after='encode_msgpack(Bin).' next='encode_msgpack(Bin) ->'
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='encode(Bin, msgpack) ->' before='Ret =' after='encode_msgpack(Bin),'
+
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='new_v1' after='new_v1' next='%% @doc'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='Ret =' after='new_v1'
 }
 
 add_ppp_ts1.3_riak_kv()
@@ -280,9 +283,17 @@ add_ppp_ts1.3_riak_kv()
 
 #           insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_w1c_worker.erl fnstart='handle_cast({put, Bucket,' before='NewState = case' after='end,'
 
-    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[is_ts/1\\]).'
+#    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[is_ts/1\\]).'
 #    insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='encode(Bin, msgpack) ->' before='encode_msgpack(Bin).' after='encode_msgpack(Bin).' next='encode_msgpack(Bin) ->'
 #    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='encode(Bin, msgpack) ->' before='Ret =' after='encode_msgpack(Bin),'
+
+#    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_ts_util.erl after='-include("riak_kv_ts.hrl").'
+
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_util.erl fnstart='get_table_ddl(Table) when' before='case riak_core' after='end.' next='%%'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_util.erl fnstart='get_table_ddl(Table) when' before='Ret =' after='end,'
+
+    insertRet               file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='new_v1' after='new_v1' next='%% @doc'
+    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='to_binary(v1, #r_object' before='Ret =' after='new_v1'
 }
 
 add_ppp_ts1.1_riak_core()

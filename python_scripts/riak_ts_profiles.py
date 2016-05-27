@@ -1778,6 +1778,29 @@ def makeTs1_3PutGraph(outputPrefix,
 
     test.render(outputPrefix)
 
+def highlightNode(test, name):
+    test.setAttr(name, 'style', 'filled')
+    test.setAttr(name, 'color', 'red')
+    test.setAttr(name, 'fillcolor', 'mistyrose')
+
+def makeAnnotatedTs1_3PutGraph(outputPrefix,
+                               nRecord, 
+                               clientFileName,     serverFileName,
+                               clientCompFileName, profilerBaseFileName):
+
+    test = getTs1_3PutDiGraph(outputPrefix,
+                           nRecord,
+                           clientFileName,     serverFileName,
+                           clientCompFileName, profilerBaseFileName)
+
+    test.title(['Riak TS1.3 Put Path', getTimeStr(test.totalUsec/test.nOp) + ' per put'])
+
+    highlightNode(test, 'batchoptionsblock')
+    highlightNode(test, 'riak_kv_ts_util:get_table_ddl')
+    highlightNode(test, 'riak_kv_w1c_worker:postcommit')
+    
+    test.render(outputPrefix)
+
 #-----------------------------------------------------------------------
 # Get a digraph object representing the query path
 #-----------------------------------------------------------------------

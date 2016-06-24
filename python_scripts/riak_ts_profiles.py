@@ -1568,7 +1568,9 @@ def addTsQueryNodes(test):
             ),
             (
                 {'label': 'riak_kv_qry_worker:add_subquery_result'},
-                {'label': 'riak_kv_qry_worker:decode_results', 'annotation':'records decoded:(MSGPACK2T)'}
+                {'label': 'riak_kv_qry_worker:decode_results', 'annotation':'records decoded:(MSGPACK2T)'},
+                {'label': 'riak_object:from_binary'},
+                {'label': 'riak_object:decode_msgpack'}
             ),
             {'label': 'riak_kv_qry_worker:subqueries_done'},
         ]
@@ -1814,11 +1816,12 @@ def getQueryDiGraph(outputPrefix,
     test = DiGraph()
     
     test.nRecord = int(nRecord)
-    test.nQuery  = int(nQuery)
-    
+    test.nOp  = int(nQuery)
+
     test.ingestProfilerOutput(clientFileName,     serverFileName,
                               clientBaseFileName, serverBaseFileName,
-                              clientCompFileName, profilerBaseFileName)
+                              clientCompFileName, profilerBaseFileName,
+                              "total")
 
     addTsQueryNodes(test)
 
@@ -1845,7 +1848,7 @@ def makeQueryGraph(outputPrefix,
     else:
         recStr = str(test.nRecord) + ' record per query'
         
-    test.title(['RiakTS Query Path', recStr, getTimeStr(test.totalUsec/test.nQuery) + ' per query'])
+    test.title(['RiakTS Query Path', recStr, getTimeStr(test.totalUsec/test.nOp) + ' per query'])
 
     test.render(outputPrefix)
 

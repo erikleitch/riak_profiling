@@ -31,9 +31,9 @@ writePutFiles()
     echo "  [C, Bucket] = ts_api_util:build_and_activate_cluster_timeseries(single, n_val_one, DDL)," >> $filename
     echo "  Data = [[<<\"family1\">>, <<\"seriesX\">>, 100, 1, <<\"test1\">>, 1.0, true]]," >> $filename
     echo "" >> $filename
-    echo "  profiler:profile({start, "total"})," >> $filename
+    echo "  profiler:profile({start, \"total\"})," >> $filename
     echo "  ok = ts_api_util:putDataModTime(C, Bucket, Data, $nRecord, 1, true)," >> $filename
-    echo "  profiler:profile({stop, "total"})," >> $filename
+    echo "  profiler:profile({stop, \"total\"})," >> $filename
     echo "" >> $filename
     
     echo "  pass." >> $filename
@@ -240,84 +240,3 @@ runPutProfile()
     preview $outDir"/"$graphPrefix".png"
 }
 
-getlast()
-{
-    if [ $# -lt 1 ]
-    then
-	echo "Usage: getlast dir"
-	return
-    fi
-
-    dir=$1
-
-    unset files
-    unset times
-    
-    iFile=0
-    for file in $dir/*.txt
-    do 
-	times[iFile]=`stat -t %s $file | awk '{print $10}'`
-	files[iFile]=$file
-	iFile=$[$iFile+1]
-    done
-
-    arr2=( $(
-	    for el in "${times[@]}"
-	    do
-		echo "$el"
-	    done | sort -r) )
-
-    latest=${arr2[0]}
-
-    iFile=0
-    for el in "${files[@]}"
-    do
-	if [ ${times[iFile]} = $latest ] 
-	then
-	    file=${files[iFile]}
-	    echo $file
-	fi
-	iFile=$[$iFile+1]
-    done
-}
-
-copylast()
-{
-    inDir=$1
-    outDir=$2
-    type=$3
-
-    case $type in
-	"test")
-	    cp $(getlast $inDir/client_profiler_results) $outDir/client.txt
-	    cp $(getlast $inDir/server_profiler_results) $outDir/server.txt
-	    ;;
-	"base")
-	    cp $(getlast $inDir/client_profiler_results) $outDir/clientbase.txt
-	    cp $(getlast $inDir/server_profiler_results) $outDir/serverbase.txt
-	    ;;
-	"profbase")
-	    cp $(getlast $inDir/client_profiler_results) $outDir/profbase.txt
-	    ;;
-	"comp")
-	    cp $(getlast $inDir/client_profiler_results) $outDir/clientcomp.txt
-	    ;;
-	*)
-	    ;;
-    esac
-}
-
-copyscripts()
-{
-    local vers=$1
-    case $vers in
-	"TS1.3")
-	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/timeseries_util.erl tests
-	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/ts_api_util.erl tests
-	    ;;
-	"TS1.1")
-	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/timeseries_util.erl tests
-	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/ts_api_util.erl tests
-	    ;;
-    esac
-}

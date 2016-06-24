@@ -6,16 +6,16 @@
 ;; Insert a pair of default profiler tags
 ;;-----------------------------------------------------------------------
 
-(defun insert-prof-pair-def (fnstart linebefore lineafter replace)
+(defun insert-prof-pair-def (fnstart linebefore lineafter replace &optional next)
   (interactive "sfnstart: \nslinebefore: \nslineafter: \nsreplace")
   (insert-prof-before-line-def fnstart linebefore "start")
-  (insert-prof-after-line-def fnstart lineafter "stop" replace)
+  (insert-prof-after-line-def fnstart lineafter "stop" replace next)
   )
 
-(defun insert-prof-pair (fnstart linebefore lineafter tag replace)
+(defun insert-prof-pair (fnstart linebefore lineafter tag replace &optional next)
   (interactive "sfnstart: \nslinebefore: \nslineafter: \nstag: \nsreplace")
   (insert-prof-before-line fnstart linebefore tag "start" "false")
-  (insert-prof-after-line fnstart lineafter tag "stop" replace "false")
+  (insert-prof-after-line fnstart lineafter tag "stop" replace "false" next)
   )
 
 ;;------------------------------------------------------------
@@ -51,16 +51,39 @@
 ;; Insert a profiler tag after the specified line
 ;;------------------------------------------------------------
 
-(defun insert-prof-after-line-def (fnstart line cmd replace)
+(defun insert-prof-after-line-def (fnstart line cmd replace &optional next)
   (interactive "sfnstart: \nsline: \nscmd: \nsreplace: ")
-  (insert-prof-after-line fnstart line "?FNNAME()" cmd replace "true")
+  (insert-prof-after-line fnstart line "?FNNAME()" cmd replace "true" next)
   )
 
-(defun insert-prof-after-line (fnstart line tag cmd replace literal)
-  (interactive "sstart string: \nsline: \nstag: \nscmd: \nsreplace: \nsliteral:")
+(defun insert-prof-after-line (fnstart line tag cmd replace literal &optional next)
+
+  (interactive "P")
+
   (beginning-of-buffer)
+
+  ;; Skip to the start of the function
+
+  (print "Searching to")
+  (print fnstart)
   (re-search-forward fnstart) (beginning-of-line)
-  (re-search-forward line) (end-of-line)
+
+  
+  ;; If next was specified, search forward to next, then search
+  ;; backward to the line.  Else just search forward to the line
+  
+  ( if next
+      (progn
+	(print "next was defined - searching to: ")
+			(print next)
+	(re-search-forward next) (beginning-of-line)
+	(re-search-backward line) (end-of-line)
+	)
+    (progn
+      (print "next was NOT defined")
+      (re-search-forward line) (end-of-line)
+      )
+    )
 
   (if (equal replace "true")
       (progn
@@ -95,6 +118,88 @@
   
   (save-buffer)
   )
+
+(defun my-message (&optional ask)
+  (interactive "P")
+  (message (if ask
+	       (reado-from-minibuffer "Message: ")
+	     "foo")))
+
+(defun test-optional-pass-one (line)
+  (interactive "sline:")
+  (test-optional-pass-two line)
+  )
+
+(defun test-optional-pass-two (line &optional myvar)
+  (interactive "P")
+  (test-optional line myvar)
+  )
+
+(defun test-optional (line &optional myvar)
+  (interactive "P")
+  (beginning-of-buffer)
+  
+  ( if myvar
+      (progn
+	(re-search-forward myvar) (beginning-of-line)
+	(re-search-backward line) (end-of-line)
+	)
+    (progn
+      (re-search-forward line) (end-of-line)
+      )
+    )
+)
+
+(defun insert-prof-after-line-next (fnstart line tag cmd replace literal &optional next)
+  (interactive "P")
+  (beginning-of-buffer)
+  
+  (re-search-forward fnstart) (beginning-of-line)
+
+  ( if next
+      (
+       (re-search-forward next) (beginning-of-line)
+       (re-search-backward line) (end-of-line)
+       )
+    (
+     (re-search-forward line) (end-of-line)
+     )
+    )
+
+  (if (equal replace "true")
+      (progn
+	(setq segstart (point))
+	(forward-char -1)
+	(setq term (delete-and-extract-region segstart (point)))    
+	(insert ",")
+	)
+    )
+
+  (insert "\n")
+
+  (if (equal literal "true")
+      (progn
+	(insert "    profiler:perf_profile({" cmd ", ")(insert tag)(insert "})")	
+	)
+    
+    (progn
+      (insert "    profiler:perf_profile({" cmd ", \"")(insert tag)(insert "\"})")	
+      )
+    )
+  
+  (if (equal replace "true")
+      (progn
+	(insert term)
+	)
+
+    (progn
+      	(insert ",")
+	)
+    )
+  
+  (save-buffer)
+  )
+
 
 ;;------------------------------------------------------------
 ;; Insert a Return 
@@ -155,3 +260,13 @@
   (insert insertline)(insert "\n")(beginning-of-line)(indent-for-tab-command)
   (save-buffer)
 )	  
+	  
+(defun test-pair ()
+  (interactive "P")
+  (insert-prof-pair-def "add_subquery_result" "Ret =" "end," "true" "-spec")
+  )		      
+
+(defun test-after (line)
+  (interactive "sline:")
+  (insert-prof-after-line-def "add_subquery_result" "end," "stop" "true" "-spec")
+  )

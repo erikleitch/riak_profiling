@@ -107,17 +107,17 @@ confirm_select(ClusterType, TestType, DDL, Data, Qry, Expected) ->
 %%
 
 activate_bucket(Node, _DDL) ->
-    rt:admin(Node, ["bucket-type", "activate", get_bucket()]).
+    rt:admin(Node, ["bucket-type", "activate", get_bucket(api)]).
+
+activate_bucket(Node, _DDL, Api) ->
+    rt:admin(Node, ["bucket-type", "activate", get_bucket(Api)]).
 
 create_bucket(Node, NVal) ->
     create_bucket(Node, NVal, false).
 
 create_bucket(Node, DDL, NVal) when is_integer(NVal) ->
-    Props = io_lib:format("{\\\"props\\\": {\\\"n_val\\\": " ++ 
-			      integer_to_list(NVal) ++
-			      ", \\\"table_def\\\": \\\"~s\\\"}}", [DDL]),
-    rt:admin(Node, ["bucket-type", "create", get_bucket(), 
-		    lists:flatten(Props)]);
+    create_bucket(Node, DDL, NVal, api);
+
 create_bucket(Node, NVal, WriteOnce) ->
     case WriteOnce of
 	false ->
@@ -135,13 +135,20 @@ create_bucket(Node, NVal, WriteOnce) ->
 			    lists:flatten(Props)])
     end.
 
+create_bucket(Node, DDL, NVal, Api) when is_integer(NVal) ->
+    Props = io_lib:format("{\\\"props\\\": {\\\"n_val\\\": " ++ 
+			      integer_to_list(NVal) ++
+			      ", \\\"table_def\\\": \\\"~s\\\"}}", [DDL]),
+    Args = ["bucket-type", "create", get_bucket(Api), lists:flatten(Props)],
+    io:format("Calling admin with Args = ~p~n", [Args]),
+    rt:admin(Node, Args).
+
 create_bucket_type(Nodes, Type, Props) ->
     lager:info("Create bucket type ~p, wait for propagation", [Type]),
     rt:create_and_activate_bucket_type(Nodes, Type, Props),
     rt:wait_until_bucket_type_status(Type, active, Nodes),
     rt:wait_until_bucket_props(Nodes, {Type, <<"bucket">>}, Props),
     ok.
-
 
 %% @ignore
 maybe_stop_a_node(one_down, [H | _T]) ->
@@ -198,6 +205,15 @@ build_c2(Size, Config) ->
     [_Node1|_] = Nodes = rt:deploy_nodes(Size, Config),
     rt:join_cluster(Nodes),
     Nodes.
+
+get_bucket(Ind) when is_integer(Ind) ->
+    "Gen" ++ integer_to_list(Ind);
+get_bucket(api) ->
+    "GeoCheckin";
+get_bucket(bede) ->
+    "Bede";
+get_bucket(brianbede) ->
+    "action".
 
 get_bucket() ->
     "GeoCheckin".

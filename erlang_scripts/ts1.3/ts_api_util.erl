@@ -30,65 +30,43 @@
 % Cluster setup only. 
 %------------------------------------------------------------
 
-build_and_activate_cluster_normal(ClusterType, TestType, WriteOnce, UseNativeEncoding) ->
-    [Node | _] = timeseries_util:build_cluster(ClusterType),
-    
-    case TestType of
-	normal ->
-	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, 3, WriteOnce),
-	    {ok, _} = timeseries_util:activate_bucket(Node, []);
-	n_val_one ->
-	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, 1, WriteOnce),
-	    {ok, _} = timeseries_util:activate_bucket(Node, []);
-	no_ddl ->
-	    io:format("1 - NOT Creating or activating bucket - failure test~n"),
-	    ok
-    end,
-    Bucket = list_to_binary(timeseries_util:get_bucket()),
-    C = rt:pbc(Node),
-    riakc_pb_socket:use_native_encoding(C, UseNativeEncoding),
-    [C, Bucket].
-
 build_and_activate_cluster_timeseries(ClusterType, TestType, DDL) ->
+    build_and_activate_cluster(ClusterType, TestType, DDL, api).
+
+build_and_activate_cluster_bede(ClusterType, TestType, DDL) ->
+    build_and_activate_cluster(ClusterType, TestType, DDL, bede).
+
+build_and_activate_cluster_brianbede(ClusterType, TestType, DDL) ->
+    build_and_activate_cluster(ClusterType, TestType, DDL, brianbede).
+
+build_and_activate_cluster(ClusterType, TestType, DDL, Api) ->
     [Node | _] = timeseries_util:build_cluster(ClusterType),
     
     case TestType of
 	normal ->
 	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 3),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
+	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 3, Api),
+	    {ok, _} = timeseries_util:activate_bucket(Node, DDL, Api);
 	n_val_two ->
 	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 2),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
+	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 2, Api),
+	    {ok, _} = timeseries_util:activate_bucket(Node, DDL, Api);
 	n_val_four ->
 	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 4),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
+	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 4, Api),
+	    {ok, _} = timeseries_util:activate_bucket(Node, DDL, Api);
 	n_val_one ->
 	    io:format("1 - Create and activate the bucket (0)~n"),
-	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 1),
-	    {ok, _} = timeseries_util:activate_bucket(Node, DDL);
+	    {ok, _} = timeseries_util:create_bucket(Node, DDL, 1, Api),
+	    {ok, _} = timeseries_util:activate_bucket(Node, DDL, Api);
 	no_ddl ->
 	    io:format("1 - NOT Creating or activating bucket - failure test~n"),
 	    ok
     end,
-    Bucket = list_to_binary(timeseries_util:get_bucket()),
+    Bucket = list_to_binary(timeseries_util:get_bucket(Api)),
     C = rt:pbc(Node),
     [C, Bucket].
 
-build_and_activate_cluster_test(Nnode, Nval, Ringsize, DDL) ->
-    io:format("1 - Building cluster with ~p nodes, ring_size = ~p, nval = ~p~n", [Nnode, Ringsize, Nval]),
-    [Node | _] = timeseries_util:build_cluster(Nnode, Ringsize),
-    {ok, _} = timeseries_util:create_bucket(Node, DDL, Nval),
-    {ok, _} = timeseries_util:activate_bucket(Node, DDL),
-
-    Bucket = list_to_binary(timeseries_util:get_bucket()),
-    C = rt:pbc(Node),
-    [C, Bucket].
-    
 %------------------------------------------------------------
 % Writes N sequential records (incrementing time) via either the
 % normal put path, or the timeseries path (switch on Ts)
@@ -109,15 +87,6 @@ setup_cluster_listkeys(ClusterType, TestType, DDL, N, Incr, Ts) ->
     Data = [[<<"family1">>, <<"seriesX">>, 100, 1, <<"test1">>, 1.0, true]],
     io:format("Time before = ~p~n", [my_time()]),
     ok = putDataModTime(C, Bucket, Data, N, Incr, Ts),
-    io:format("Time after = ~p~n", [my_time()]),
-    C.
-
-setup_cluster_test(Nnode, Nval, Ringsize, DDL, MsIncr, Ts) ->
-    [C, Bucket] = build_and_activate_cluster_test(Nnode, Nval, Ringsize, DDL),
-
-    Data = [{<<"family1">>, <<"seriesX">>, 100, 1, <<"test1">>, 1.0, true}],
-    io:format("Time before = ~p~n", [my_time()]),
-    ok = putDataModTime(C, Bucket, Data, Ringsize, MsIncr, Ts),
     io:format("Time after = ~p~n", [my_time()]),
     C.
 
@@ -199,6 +168,112 @@ putDataModTime(C, Bucket, Data, N, Acc, Incr, Ts) ->
     putDataModTime(C, Bucket, Data, N, Acc-1, Incr, Ts).
 
 %------------------------------------------------------------
+% Put Bede-style data for multiple users
+%------------------------------------------------------------
+
+putBedeUserData(C, Bucket, NUser, NData, Incr, Ts) ->
+    putBedeUserData(C, Bucket, NUser, NData, Incr, Ts, 0).
+
+putBedeUserData(_C, _Bucket, _NUser, _NData, _Incr, _Ts, _NUser) ->
+    ok;
+putBedeUserData(C, Bucket, NUser, NData, Incr, Ts, Acc) ->
+    User = list_to_binary("user" ++ integer_to_list(Acc)),
+    io:format("Putting data for user = ~p~n", [User]),
+    putDataModTimeBede(C, Bucket, NData, Incr, Ts, User),
+    putBedeUserData(C, Bucket, NUser, NData, Incr, Ts, Acc+1).
+
+%------------------------------------------------------------
+% Put Bede-style data for a single user
+%------------------------------------------------------------
+
+putDataModTimeBede(C, Bucket, N, Incr, Ts, User) ->
+    putDataModTimeBede(C, Bucket, N, 0, Incr, Ts, User, 0.0).
+
+putDataModTimeBede(_C, _Bucket, _N, _N, _Incr, _Ts, _User, _Stake) ->
+    ok;
+putDataModTimeBede(C, Bucket, N, Acc, Incr, Ts, UserId, Stake) ->
+						% Payout is Odds * Amt
+
+    Odds = 2.0,
+
+						% Probability is the likelihood of winning (in percent)
+
+    Prob = 48.0,
+
+    UtcTime = (Acc+1)*Incr, 
+    BedeRef = <<"bederef">>,
+    Category = <<"category">>,
+    Currency = <<"euros">>,
+    EventDescription = <<"eventdesc">>,
+    EventType = 0,
+    Amount = getBedeStake(Acc, Stake),
+    Description = <<"bet">>,
+    Id = trunc(Acc/2),
+    IsNew = true,
+    ActionStatus = 0,
+    Type = getBedeType(Acc, Prob),
+    RemoteRef = <<"c4c26ff">>,
+    SiteCode = <<"betuk">>,
+    EventStatus = 0,
+
+    Credit = 1.0,
+    Debit  = 1.0,
+
+    VoidedAtUtc = (Acc+1)*Incr, 
+
+    case Type of
+	<<"WIN">> ->
+	    Payout = Amount * Odds;
+	_ ->
+	    Payout = Amount
+    end,
+
+    Data = [{UserId, UtcTime, BedeRef, Category, Currency, EventDescription,
+	     EventType, Payout, Description, Id, IsNew, ActionStatus, Type,
+	     RemoteRef, SiteCode, EventStatus, Credit, Debit, VoidedAtUtc}],
+
+    case Ts of
+	true ->
+	    case riakc_ts:put(C, Bucket, Data) of
+		ok ->
+		    ok;
+		{error, Reason} ->
+		    io:format("Got an error: ~p~n", [Reason])
+	    end;
+	false ->
+	    Key = list_to_binary("key"++integer_to_list(Acc)),
+	    Obj = riakc_obj:new(<<"GeoCheckin">>, Key, Data),
+	    ok  = riakc_pb_socket:put(C, Obj)
+    end,
+    putDataModTimeBede(C, Bucket, N, Acc+1, Incr, Ts, UserId, Amount).
+
+%------------------------------------------------------------
+% Utility functions for simulating Bede data
+%------------------------------------------------------------
+
+getBedeType(Acc, Prob) ->
+    case Acc rem 2 of
+	0 ->
+	    <<"STAKE">>;
+	_ ->
+	    Rand = random:uniform(100)*1.0-1.0,
+	    getType(Rand, Prob)
+    end.
+
+getType(Rand, Prob) when Rand < Prob ->
+    <<"WIN">>;
+getType(_Rand, _Prob) ->
+    <<"LOSS">>.
+
+getBedeStake(Acc, Stake) ->
+    case Acc rem 2 of
+	0 ->
+	    random:uniform(100)*1.0;
+	_ ->
+	    Stake
+    end.
+
+%------------------------------------------------------------
 % Cluster setup only.  Returns the client connection
 %------------------------------------------------------------
 
@@ -256,6 +331,45 @@ get_data(api) ->
 	[[<<"family1">>, <<"seriesX">>, 200, 2, <<"test2">>, 2.0, false]] ++
 	[[<<"family1">>, <<"seriesX">>, 300, 3, <<"test3">>, 3.0, true]] ++
 	[[<<"family1">>, <<"seriesX">>, 400, 4, <<"test4">>, 4.0, false]].
+
+%------------------------------------------------------------
+% Create DDL for a table where Time is in the Ind location
+%------------------------------------------------------------
+
+get_ddl(Ind) when is_integer(Ind) ->
+    L = ["CREATE TABLE Gen" ++ integer_to_list(Ind) ++" (",
+	 "myfamily    varchar     not null, ",
+	 "myseries    varchar     not null, ",
+	 "myfloat     double      not null, ",
+	 "mybool      boolean     not null, ",
+	 "myint       sint64      not null, ",
+	 "mybin       varchar     not null, ",
+	 "PRIMARY KEY ((myfamily, myseries, quantum(time, 15, 'm')), ",
+	 "myfamily, myseries, time, mybin))"],
+    list_to_binary(lists:sublist(L,Ind) ++ "time timestamp not null, " ++ lists:nthtail(Ind,L));
+    
+get_ddl(bede) ->
+    _SQL = "CREATE TABLE Bede (" ++
+	"UserId varchar not null, " ++
+	"UtcTime timestamp not null, " ++
+	"BedeReference varchar not null, " ++
+	"Category varchar not null, " ++
+	"Currency varchar, " ++
+	"EventDescription varchar, " ++
+	"EventType sint64, " ++
+	"Amount double, " ++
+	"Description varchar, " ++
+	"Id sint64, " ++
+	"IsNew boolean, " ++
+	"Status sint64, " ++
+	"Type varchar not null, " ++
+	"RemoteReference varchar, " ++
+	"SiteCode varchar not null, " ++
+	"EventStatus sint64 not null, " ++
+	"TotalCredit double, " ++
+	"TotalDebit double, " ++
+	"VoidedAtUtc timestamp, " ++
+	"PRIMARY KEY ((UserId),  UserId, UtcTime))";
 
 get_ddl(api) ->
     _SQL = "CREATE TABLE GeoCheckin (" ++

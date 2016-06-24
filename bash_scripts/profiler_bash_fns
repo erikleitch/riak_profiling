@@ -62,17 +62,32 @@ insertProfPair()
     after=$(valOrDef after '' ${arr[@]})
     tag=$(valOrDef tag '' ${arr[@]})
     replace=$(valOrDef replace 'true' ${arr[@]})
+    next=$(valOrDef next '' ${arr[@]})
 
     case $tag in
 	(\"\")
-            cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def $fnstart $before $after $replace)'"
-	    eval $cmd
+	    case $next in
+		(\"\")
+		    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def $fnstart $before $after $replace)'"
+		    ;;
+		(*)
+		    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair-def $fnstart $before $after $replace $next)'"
+		    ;;
+	    esac
 	    ;;
 	(*)
-	    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair $fnstart $before $after $tag $replace)'"
-	    eval $cmd
+	    case $next in
+		(\"\")
+		    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair $fnstart $before $after $tag $replace)'"
+		    ;;
+		(*)
+		    cmd="emacs --batch --load $RIAK_PROF_BASE/emacs_scripts/emacs_erlang_macros --file $file --eval '(insert-prof-pair $fnstart $before $after $tag $replace $next)'"
+		    ;;
+	    esac
 	    ;;
     esac
+    echo "Cmd = $cmd"
+    eval $cmd
 }
 
 #------------------------------------------------------------
@@ -363,5 +378,157 @@ add_ppp_ts1.3()
     add_ppp_ts1.3_riak_api
     add_ppp_ts1.3_riak_kv
     add_ppp_ts1.3_riak_core
+}
+
+#------------------------------------------------------------
+# Add query-path profiling to TS1.3 riak_api
+#------------------------------------------------------------
+
+add_qpp_ts1.3_riak_api()
+{
+    #------------------------------------------------------------
+    # Set up riak_api for profiling
+    #------------------------------------------------------------
+    
+    insertIncludeLineAfter file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl after='-export_type'
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='init(' before='riak_api_stat:update' tag='/tmp/server_profiler_results' cmd=prefix
+    insertRet              file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='process_message(atom' before='Service:process' after='end.' next='@doc'
+    insertProfPair         file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='process_message(atom' before='Ret =' after='end,'
+
+    insertRet              file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='try' after='end;' next='connected(_Event'
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret =' cmd=start
+    insertProfBefore       file=riak_ee/deps/riak_api/src/riak_api_pb_server.erl fnstart='connected({msg, MsgCode' before='Ret;' cmd=stop
+}
+
+#------------------------------------------------------------
+# Add query-path profiling to TS1.3 riak_kv
+#------------------------------------------------------------
+
+add_qpp_ts1.3_riak_kv()
+{
+    #------------------------------------------------------------
+    # Set up riak_kv for profiling
+    #------------------------------------------------------------
+
+#    insertIncludeLineBefore file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl before='decode_query_common(Q'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsqueryreq(_Mod' before='case riak_kv_ts' after='end.' next='%% ----'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_ts_svc.erl fnstart='sub_tsqueryreq(_Mod' before='Ret =' after='end,'
+
+#    insertIncludeLineAfter  file=riak_ee/deps/riak_kv/src/riak_kv_qry.erl after='query_tabular_result/0'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_qry.erl fnstart='maybe_await_query_results(_)' before='receive' after='end.' next='%% Format'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_qry.erl fnstart='maybe_await_query_results(_)' before='Ret =' after='end,'
+
+#    insertIncludeLineAfter file=riak_ee/deps/riak_kv/src/riak_kv_qry_worker.erl after='-define(NO_PG_SORT, undefined).'
+#    insertRet               file=riak_ee/deps/riak_kv/src/riak_kv_qry_worker.erl fnstart='#riak_sel_clause_v1{calc_type' before='case lists' after='end.' next='-spec'
+#    insertProfPair          file=riak_ee/deps/riak_kv/src/riak_kv_qry_worker.erl fnstart='#riak_sel_clause_v1{calc_type' before='Ret =' after='end,' next='-spec'
+
+#    insertIncludeLineAfter   file=riak_ee/deps/riak_kv/src/riak_object.erl after='-export(\\[is_ts/1\\])'
+#    insertProfPair           file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='decode_msgpack' before='{ok, Unpacked' after='{ok, Unpacked' next='decode_maybe_binary'
+
+    insertRet                file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='from_binary(B,K,\\<' before='case' after='end;' next='from_binary(_B'
+    insertProfPair           file=riak_ee/deps/riak_kv/src/riak_object.erl fnstart='from_binary(B,K,\\<' before='Ret =' after='end,'
+}
+
+#------------------------------------------------------------
+# Add query-path profiling to TS1.3 riak_core
+#------------------------------------------------------------
+
+add_qpp_ts1.3_riak_core()
+{
+    #------------------------------------------------------------
+    # Set up riak_core for profiling
+    #------------------------------------------------------------
+
+    insertIncludeLineAfter  file=riak_ee/deps/riak_core/src/riak_core_vnode_worker.erl after='-endif.'
+    insertProfPair          file=riak_ee/deps/riak_core/src/riak_core_vnode_worker.erl fnstart='handle_cast({work,' before='NewModState = ' after='gen_fsm'
+}
+
+add_qpp_ts1.3()
+{
+    add_qpp_ts1.3_riak_api
+    add_qpp_ts1.3_riak_kv
+    add_qpp_ts1.3_riak_core
+}
+
+copylast()
+{
+    inDir=$1
+    outDir=$2
+    type=$3
+
+    case $type in
+	"test")
+	    cp $(getlast $inDir/client_profiler_results) $outDir/client.txt
+	    cp $(getlast $inDir/server_profiler_results) $outDir/server.txt
+	    ;;
+	"base")
+	    cp $(getlast $inDir/client_profiler_results) $outDir/clientbase.txt
+	    cp $(getlast $inDir/server_profiler_results) $outDir/serverbase.txt
+	    ;;
+	"profbase")
+	    cp $(getlast $inDir/client_profiler_results) $outDir/profbase.txt
+	    ;;
+	"comp")
+	    cp $(getlast $inDir/client_profiler_results) $outDir/clientcomp.txt
+	    ;;
+	*)
+	    ;;
+    esac
+}
+
+copyscripts()
+{
+    local vers=$1
+    case $vers in
+	"TS1.3")
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/timeseries_util.erl tests
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.3/ts_api_util.erl tests
+	    ;;
+	"TS1.1")
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/timeseries_util.erl tests
+	    cp $RIAK_PROF_BASE/erlang_scripts/ts1.1/ts_api_util.erl tests
+	    ;;
+    esac
+}
+
+getlast()
+{
+    if [ $# -lt 1 ]
+    then
+	echo "Usage: getlast dir"
+	return
+    fi
+
+    dir=$1
+
+    unset files
+    unset times
+    
+    iFile=0
+    for file in $dir/*.txt
+    do 
+	times[iFile]=`stat -t %s $file | awk '{print $10}'`
+	files[iFile]=$file
+	iFile=$[$iFile+1]
+    done
+
+    arr2=( $(
+	    for el in "${times[@]}"
+	    do
+		echo "$el"
+	    done | sort -r) )
+
+    latest=${arr2[0]}
+
+    iFile=0
+    for el in "${files[@]}"
+    do
+	if [ ${times[iFile]} = $latest ] 
+	then
+	    file=${files[iFile]}
+	    echo $file
+	fi
+	iFile=$[$iFile+1]
+    done
 }
 

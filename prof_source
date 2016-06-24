@@ -22,4 +22,5 @@ export PYTHONPATH=${PYTHONPATH}:${RIAK_PROF_BASE}/python_scripts:${RIAK_PROF_BAS
 source $RIAK_PROF_BASE/bash_scripts/generic_bash_fns
 source $RIAK_PROF_BASE/bash_scripts/profiler_bash_fns
 source $RIAK_PROF_BASE/bash_scripts/put_bash_fns
+source $RIAK_PROF_BASE/bash_scripts/query_bash_fns
 

@@ -493,6 +493,29 @@ def addTs1_1PutNodes(test):
     test.edge('gen_server:reply',               'gen_server_call1',                     {'label':'7', 'color':server_color})
     
 
+def addHandoffNodes(test):
+    
+    service_color = 'blue'
+    fsm_color     = 'red'
+    server_color  = 'cyan'
+    internode_color = 'purple'
+    
+    #------------------------------------------------------------
+    # riak_core_vnode
+    #------------------------------------------------------------
+        
+    riak_core_vnode = Node({'label': 'riak_core_vnode',       'color': service_color})
+    riak_core_vnode.append(
+        (
+            {'label': 'riak_core_vnode:active', 'annotation':'handoff_type=resize'},
+            {'label': 'riak_core_vnode:vnode_handoff_command'},
+            {'label': 'Mod:vnode_handoff_command'},
+        )
+    )
+
+    test.append(riak_core_vnode)
+    
+
 def addTs1_3PutNodes(test):
     
     service_color = 'blue'
@@ -2049,6 +2072,12 @@ def graphAae():
     d.title('Riak AAE  Path')
     d.render('aae')
 
+def graphHandoff():
+    d = DiGraph()
+    addHandoffNodes(d)
+    d.title('Riak Handoff Path')
+    d.render('handoff')
+
 def makeGraphs():
     graphTsQuery()
     graphTs1_1Put()
@@ -2059,5 +2088,7 @@ def makeGraphs():
     graphTsListKeys()
     graphReadRepair()
     graphAae()
+    graphHandoff()
 
     
+graphHandoff()
